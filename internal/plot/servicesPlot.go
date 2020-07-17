@@ -12,7 +12,7 @@ import (
 	"time"
 )
 
-//Структура Candle (японская свеча) содержит дату, объем торгов в момент этой даты, а также информацию о цене в этот момент
+// Структура Candle (японская свеча) содержит дату, объем торгов в момент этой даты, а также информацию о цене в этот момент
 type Candle struct {
 	Date   time.Time // время в момент которого сущестует свеча, формат yyyy-mm-dd, время по ETS
 	Open   float64   // цена открытия
@@ -22,40 +22,40 @@ type Candle struct {
 	Volume int       // объем торгов
 }
 
-//интерфейс менеджера графиков, реализующие его струтуры должны иметь метод получающий символ финансового актива
-//и возвращать список свечей в виде списка экземпляров структуры Candle
-//(Tesla - название компании, TSLA - символ акций (финансового актива) этой компании на рынке)
+// интерфейс менеджера графиков, реализующие его струтуры должны иметь метод получающий символ финансового актива
+// и возвращать список свечей в виде списка экземпляров структуры Candle
+// (Tesla - название компании, TSLA - символ акций (финансового актива) этой компании на рынке)
 type PlotManager interface {
 	GetPlot(string) ([]Candle, error) // принимает символ финансового актива, возвращать список свечей в виде списка экземпляров структуры Candle
 }
 
-//Реализация интерфейса PlotManager, имеет параметр apiKey являющийся клюом к API Alpha Ventage
+// Реализация интерфейса PlotManager, имеет параметр apiKey являющийся клюом к API Alpha Ventage
 type PlotManagerAlphaVantage struct {
-	ApiKey string
+	APIKey string
 }
 
-//Конструктор для структуры PlotManagerAlphaVantage
+// Конструктор для структуры PlotManagerAlphaVantage
 func NewPlotManagerAlphaVantage(apiKey string) PlotManager {
 	plotManager := PlotManagerAlphaVantage{apiKey}
 	return plotManager
 }
 
-//Метод структуры PlotManagerAlphaVantage, принимает символ финансового актива, возвращает список экземпляров структуры Candle
+// Метод структуры PlotManagerAlphaVantage, принимает символ финансового актива, возвращает список экземпляров структуры Candle
 func (plotManager PlotManagerAlphaVantage) GetPlot(symbol string) ([]Candle, error) {
-	apiKey := plotManager.ApiKey
-	body, err := GetPlotJson(symbol, apiKey)
+	apiKey := plotManager.APIKey
+	body, err := GetPlotJSON(symbol, apiKey)
 	if err != nil {
 		return nil, err
 	}
-	plot, err := ScrapJsonBody(body)
+	plot, err := ScrapJSONBody(body)
 	if err != nil {
 		return nil, err
 	}
 	return plot, nil
 }
 
-//Метод принимающий символ финансового актива и ключ API, производит запроса на Alpha Ventage и возвращает тело ответа
-func GetPlotJson(symbol string, apiKey string) (string, error) {
+// Метод принимающий символ финансового актива и ключ API, производит запроса на Alpha Ventage и возвращает тело ответа
+func GetPlotJSON(symbol, apiKey string) (string, error) {
 	req := fmt.Sprintf("https://www.alphavantage.co/query?function=TIME_SERIES_DAILY&symbol=%s&apikey=%s", symbol, apiKey)
 	resp, err := http.Get(req)
 	if err != nil {
@@ -66,6 +66,7 @@ func GetPlotJson(symbol string, apiKey string) (string, error) {
 	if err != nil {
 		return "", err
 	}
+
 	if strings.Contains(string(body), "Note") {
 		err = errors.New("exceedApiFrequency")
 		return "", err
@@ -78,8 +79,8 @@ func GetPlotJson(symbol string, apiKey string) (string, error) {
 	return string(body), err
 }
 
-//Метод принимающий в себя тело ответа из функции GetPlotJson и превращающий его в список структуры Candle
-func ScrapJsonBody(body string) ([]Candle, error) {
+// Метод принимающий в себя тело ответа из функции GetPlotJSON и превращающий его в список структуры Candle
+func ScrapJSONBody(body string) ([]Candle, error) {
 	byt := []byte(body)
 	var days []Candle
 	var dat map[string]interface{}
@@ -117,8 +118,8 @@ func ScrapJsonBody(body string) ([]Candle, error) {
 	return days, nil
 }
 
-//Вспомогательный метод превращающий цены в формате String в цены в формате Float64
-func GetFloatPrices(openS string, highS string, lowS string, closeS string) ([]float64, error) {
+// Вспомогательный метод превращающий цены в формате String в цены в формате Float64
+func GetFloatPrices(openS, highS, lowS, closeS string) ([]float64, error) {
 	openF, err := strconv.ParseFloat(openS, 64)
 	if err != nil {
 		return nil, err
